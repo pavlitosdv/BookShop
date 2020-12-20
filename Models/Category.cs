@@ -8,7 +8,7 @@ namespace Models
    public class Category
     {
         [Key]
-        public int Key { get; set; }
+        public int Id { get; set; }
 
         [Display(Name="Category Name")]
         [Required]
