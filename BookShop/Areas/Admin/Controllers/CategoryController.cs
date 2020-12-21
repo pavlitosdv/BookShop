@@ -70,5 +70,19 @@ namespace BookShop.Areas.Admin.Controllers
 
             return Json(new { data = getall });
         }
+
+        [HttpDelete]
+        public IActionResult Delete(int id)
+        {
+            var objFromDb = _unitOfWork.Category.GetById(id);
+            if (objFromDb == null)
+            {
+                return Json(new { success = false, message = "Category not found for deletion" });
+            }
+            _unitOfWork.Category.Remove(objFromDb);
+            _unitOfWork.Save();
+            return Json(new { success = true, message = "Delete Successful" });
+        }
+
     }
 }
