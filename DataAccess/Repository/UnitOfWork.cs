@@ -11,12 +11,14 @@ namespace DataAccess.Repository
         private readonly ApplicationDbContext _dbcontext;
 
         public ICategoryRepository Category { get; private set; }
+        public ICoatingTypeRepository CoatingType { get; private set; }
         public IStoreProcedure StoreProcedure { get; private set; }
 
         public UnitOfWork(ApplicationDbContext dbcontext)
         {
             _dbcontext = dbcontext;
             Category = new CategoryRepository(dbcontext);
+            CoatingType = new CoatingTypeRepository(dbcontext);
             StoreProcedure = new StoreProcedureCalls(dbcontext);
         }
 
