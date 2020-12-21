@@ -40,7 +40,27 @@ namespace BookShop.Areas.Admin.Controllers
                 return NotFound();
             }
             return View(category);
+        }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AddOrUpdate(Category category)
+        {
+            if (ModelState.IsValid)
+            {
+                if (category.Id == 0)
+                {
+                    _unitOfWork.Category.Add(category);
+                }
+                else
+                {
+                    _unitOfWork.Category.Update(category);
+                }
+                _unitOfWork.Save();
+                return RedirectToAction(nameof(Index)); // insted writing with magic string "Index" 
+                                                        //we use nameof(Index)
+            }
+            return View(category);
         }
 
         [HttpGet]

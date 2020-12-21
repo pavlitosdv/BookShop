@@ -24,7 +24,6 @@ namespace DataAccess.Repository
             if(categoryFromDB != null)
             {
                 categoryFromDB.Name = category.Name;
-                _dBContext.SaveChanges();
             }
         }
     }

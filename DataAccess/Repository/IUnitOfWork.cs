@@ -10,5 +10,7 @@ namespace DataAccess.Repository
         ICategoryRepository Category { get; }
 
         IStoreProcedure StoreProcedure { get; }
+
+        void Save();
     }
 }
