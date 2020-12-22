@@ -12,6 +12,7 @@ namespace DataAccess.Repository
 
         public ICategoryRepository Category { get; private set; }
         public ICoatingTypeRepository CoatingType { get; private set; }
+        public IProductRepository Product { get; private set; }
         public IStoreProcedure StoreProcedure { get; private set; }
 
         public UnitOfWork(ApplicationDbContext dbcontext)
@@ -19,6 +20,7 @@ namespace DataAccess.Repository
             _dbcontext = dbcontext;
             Category = new CategoryRepository(dbcontext);
             CoatingType = new CoatingTypeRepository(dbcontext);
+            Product = new ProductRepository(dbcontext);
             StoreProcedure = new StoreProcedureCalls(dbcontext);
         }
 

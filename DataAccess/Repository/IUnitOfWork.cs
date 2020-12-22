@@ -9,6 +9,7 @@ namespace DataAccess.Repository
     {
         ICategoryRepository Category { get; }
         ICoatingTypeRepository CoatingType { get; }
+        IProductRepository Product { get; }
 
         IStoreProcedure StoreProcedure { get; }
 
