@@ -12,6 +12,8 @@ namespace DataAccess.Repository
         ICoatingTypeRepository CoatingType { get; }
         IProductRepository Product { get; }
 
+        IApplicationUserRepository ApplicationUser { get; }
+
         IStoreProcedure StoreProcedure { get; }
 
         void Save();

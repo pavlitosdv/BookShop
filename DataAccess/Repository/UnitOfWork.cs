@@ -10,6 +10,7 @@ namespace DataAccess.Repository
     {
         private readonly ApplicationDbContext _dbcontext;
 
+        public IApplicationUserRepository ApplicationUser { get; private set; }
         public ICategoryRepository Category { get; private set; }
         public ICompanyRepository Company { get; private set; }
         public ICoatingTypeRepository CoatingType { get; private set; }
@@ -19,6 +20,7 @@ namespace DataAccess.Repository
         public UnitOfWork(ApplicationDbContext dbcontext)
         {
             _dbcontext = dbcontext;
+            ApplicationUser = new ApplicationUserRepository(dbcontext);
             Category = new CategoryRepository(dbcontext);
             CoatingType = new CoatingTypeRepository(dbcontext);
             Company = new CompanyRepository(dbcontext);
