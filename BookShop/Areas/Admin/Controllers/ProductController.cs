@@ -6,6 +6,7 @@ using Models;
 using Models.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -63,23 +64,58 @@ namespace BookShop.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddOrUpdate(Product product)
+        public IActionResult AddOrUpdate(ProductViewModel productViewModel)
         {
             if (ModelState.IsValid)
             {
-                if (product.Id == 0)
+                string webRootPath = _hostEnvironment.WebRootPath; // this is the path of wwwroot
+                var files = HttpContext.Request.Form.Files;  // the files which uploaded
+
+                if (files.Count > 0)
                 {
-                    _unitOfWork.Product.Add(product);
+                    string fileName = Guid.NewGuid().ToString();
+                    var uploads = Path.Combine(webRootPath, @"images\products");
+                    var extenstion = Path.GetExtension(files[0].FileName);
+
+                    if (productViewModel.Product.ImageUrl != null)
+                    {
+                        //this is an edit and we need to remove old image
+                        var imagePath = Path.Combine(webRootPath, productViewModel.Product.ImageUrl.TrimStart('\\'));
+                        if (System.IO.File.Exists(imagePath))
+                        {
+                            System.IO.File.Delete(imagePath);
+                        }
+                    }
+                    using (var filesStreams = new FileStream(Path.Combine(uploads, fileName + extenstion), FileMode.Create))
+                    {
+                        files[0].CopyTo(filesStreams);
+                    }
+                    productViewModel.Product.ImageUrl = @"\images\products\" + fileName + extenstion;
                 }
                 else
                 {
-                    _unitOfWork.Product.Update(product);
+                    //update when they do not change the image
+                    if (productViewModel.Product.Id != 0)
+                    {
+                        Product objFromDb = _unitOfWork.Product.GetById(productViewModel.Product.Id);
+                        productViewModel.Product.ImageUrl = objFromDb.ImageUrl;
+                    }
+                }
+
+
+                if (productViewModel.Product.Id == 0)
+                {
+                    _unitOfWork.Product.Add(productViewModel.Product);
+                }
+                else
+                {
+                    _unitOfWork.Product.Update(productViewModel.Product);
                 }
                 _unitOfWork.Save();
                 return RedirectToAction(nameof(Index)); // insted writing with magic string "Index" 
                                                         //we use nameof(Index)
             }
-            return View(product);
+            return View(productViewModel);
         }
 
         [HttpGet]
