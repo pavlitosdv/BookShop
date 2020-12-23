@@ -115,6 +115,25 @@ namespace BookShop.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Index)); // insted writing with magic string "Index" 
                                                         //we use nameof(Index)
             }
+            else // if model state is not valid we want to return back the category and coating type list
+            {   //if we do not return them and return only the product view model object, it will
+                // throw an excemption becasue category and coating types will be missing
+
+                productViewModel.CategoryList = _unitOfWork.Category.GetAll().Select(i => new SelectListItem
+                {
+                    Text = i.Name,
+                    Value = i.Id.ToString()
+                });
+                productViewModel.CoatingTypeList = _unitOfWork.CoatingType.GetAll().Select(i => new SelectListItem
+                {
+                    Text = i.Name,
+                    Value = i.Id.ToString()
+                });
+                if (productViewModel.Product.Id != 0)
+                {
+                    productViewModel.Product = _unitOfWork.Product.GetById(productViewModel.Product.Id);
+                }
+            }
             return View(productViewModel);
         }
 
@@ -133,6 +152,12 @@ namespace BookShop.Areas.Admin.Controllers
             if (objFromDb == null)
             {
                 return Json(new { success = false, message = "Product not found for deletion" });
+            }
+            string webRootPath = _hostEnvironment.WebRootPath;
+            var imagePath = Path.Combine(webRootPath, objFromDb.ImageUrl.TrimStart('\\'));
+            if (System.IO.File.Exists(imagePath))
+            {
+                System.IO.File.Delete(imagePath);
             }
             _unitOfWork.Product.Remove(objFromDb);
             _unitOfWork.Save();
