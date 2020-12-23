@@ -8,6 +8,7 @@ namespace DataAccess.Repository
     public interface IUnitOfWork : IDisposable
     {
         ICategoryRepository Category { get; }
+        ICompanyRepository Company { get; }
         ICoatingTypeRepository CoatingType { get; }
         IProductRepository Product { get; }
 
