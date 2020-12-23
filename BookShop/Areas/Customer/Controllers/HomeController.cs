@@ -25,7 +25,7 @@ namespace BookShop.Area.Customer.Controllers
 
         public IActionResult Index()
         {
-            IEnumerable<Product> productList = _unitOfWork.Product.GetAll(includeProperties: "Category,CoverType");
+            IEnumerable<Product> productList = _unitOfWork.Product.GetAll(includeProperties: "Category,CoatingType");
             return View(productList);
         }
 
