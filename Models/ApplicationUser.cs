@@ -16,6 +16,11 @@ namespace Models
         public string State { get; set; }
         public string PostalCode { get; set; }
 
+        public int? CompanyId { get; set; }  //users may be individual and may not belong to a company
+                                             // so it can be nullable
+        [ForeignKey("CompanyId")]
+        public Company Company { get; set; }
+
         [NotMapped]
         public string Role { get; set; }
     }
