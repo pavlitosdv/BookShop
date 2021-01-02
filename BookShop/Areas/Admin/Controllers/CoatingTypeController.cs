@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using DataAccess.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using System;
@@ -11,6 +12,7 @@ using Utilities;
 namespace BookShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = StoreProcedureCoverTypeConstants.Role_Admin)]
     public class CoatingTypeController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

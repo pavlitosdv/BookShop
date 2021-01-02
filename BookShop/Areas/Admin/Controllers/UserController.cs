@@ -1,5 +1,6 @@
 ﻿using BookShop.DataAccess.Data;
 using DataAccess.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
@@ -7,10 +8,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Utilities;
 
 namespace BookShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = StoreProcedureCoverTypeConstants.Role_Admin + "," + StoreProcedureCoverTypeConstants.Role_Employee)]
     public class UserController : Controller
     {
         //Even if the application user is registered via the UnitOfWork, in this controller for demonstration will be 

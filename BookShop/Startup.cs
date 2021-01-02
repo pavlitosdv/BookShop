@@ -46,6 +46,15 @@ namespace BookShop
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+
+            //because we Use Areas will need to add the following code in 
+            //in order to be able and redirect us.
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = $"/Identity/Account/Login";
+                options.LogoutPath = $"/Identity/Account/Logout";
+                options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
