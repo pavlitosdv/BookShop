@@ -13,6 +13,9 @@ namespace BookShop.Areas.Admin.Controllers
     [Area("Admin")]
     public class UserController : Controller
     {
+        //Even if the application user is registered via the UnitOfWork, in this controller for demonstration will be 
+        // used the dbContext directly as an alternative
+
         private readonly ApplicationDbContext _db;
 
         public UserController(ApplicationDbContext db)
@@ -51,6 +54,8 @@ namespace BookShop.Areas.Admin.Controllers
             return Json(new { data = userList });
         }
 
+
+        //this one will check if the user is locked then will be unolocked and vice versa
         [HttpPost]
         public IActionResult LockUnlock([FromBody] string id)
         {
