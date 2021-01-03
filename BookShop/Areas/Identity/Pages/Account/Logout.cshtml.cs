@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Utilities;
 
 namespace BookShop.Areas.Identity.Pages.Account
 {
@@ -28,6 +30,9 @@ namespace BookShop.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
+            HttpContext.Session.SetInt32(StoreProcedureCoverTypeConstants.ssShoppingCart, 0); // we want the cart to be 0 when the user logs out. 
+                                                                            //so is being set to zero in order in the front page the cart to be zero
+
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
             if (returnUrl != null)
