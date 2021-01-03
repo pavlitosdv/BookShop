@@ -41,6 +41,8 @@ namespace BookShop
                                                                                         //a token that will need to have the account confirmed
                                                                                         //which will be send during registration ( OnPostAsync action method) via e-mail
             services.AddSingleton<IEmailSender, EmailSender>();
+            services.Configure<EmailOptions>(Configuration); //using Ioptions in order to map the values from the 
+                                                        // appsettings with those from EmailOptions class properties
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
