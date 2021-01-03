@@ -55,6 +55,18 @@ namespace BookShop
                 options.LogoutPath = $"/Identity/Account/Logout";
                 options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
             });
+
+            services.AddAuthentication().AddFacebook(options =>
+            {
+                options.AppId = "1";
+                options.AppSecret = "1";
+            });
+            services.AddAuthentication().AddGoogle(options =>
+            {
+                options.ClientId = "1";
+                options.ClientSecret = "1";
+
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
