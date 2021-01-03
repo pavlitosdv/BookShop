@@ -16,6 +16,10 @@ namespace DataAccess.Repository
 
         IStoreProcedure StoreProcedure { get; }
 
+        IShoppingCartRepository ShoppingCart { get; }
+        IOrderHeaderRepository OrderHeader { get; }
+        IOrderDetailsRepository OrderDetails { get; }
+
         void Save();
     }
 }

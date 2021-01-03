@@ -17,6 +17,10 @@ namespace DataAccess.Repository
         public IProductRepository Product { get; private set; }
         public IStoreProcedure StoreProcedure { get; private set; }
 
+        public IShoppingCartRepository ShoppingCart { get; private set; }
+        public IOrderDetailsRepository OrderDetails { get; private set; }
+        public IOrderHeaderRepository OrderHeader { get; private set; }
+
         public UnitOfWork(ApplicationDbContext dbcontext)
         {
             _dbcontext = dbcontext;
@@ -26,6 +30,9 @@ namespace DataAccess.Repository
             Company = new CompanyRepository(dbcontext);
             Product = new ProductRepository(dbcontext);
             StoreProcedure = new StoreProcedureCalls(dbcontext);
+            OrderDetails = new OrderDetailsRepository(dbcontext);
+            OrderHeader = new OrderHeaderRepository(dbcontext);
+            ShoppingCart = new ShoppingCartRepository(dbcontext);
         }
 
         public void Dispose()
