@@ -24,6 +24,8 @@ namespace BookShop.Areas.Customer.Controllers
         private readonly IEmailSender _emailSender;
         private readonly UserManager<IdentityUser> _userManager;
 
+        [BindProperty] // if we do not use that we should put into the POST SummaryPost(ShoppingCartViewModel ShoppingCartVM). 
+                //so have that Bind property attribute it does the binding automaticaly and it can be used inside the Action method
         public ShoppingCartViewModel ShoppingCartVM { get; set; }
 
         public CartController(IUnitOfWork unitOfWork, IEmailSender emailSender, UserManager<IdentityUser> userManager)
@@ -181,7 +183,62 @@ namespace BookShop.Areas.Customer.Controllers
             return View(ShoppingCartVM);
         }
 
-       
+        [HttpPost]
+        [ActionName("Summary")]
+        [ValidateAntiForgeryToken]
+        public IActionResult SummaryPost(string stripeToken)
+        {
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            // if in the biggining we don't have the bind property in ShoppingCartViewModel ShoppingCartVM then it will throw 
+            // us an excemption because Application user it will not be instanciated
+            ShoppingCartVM.OrderHeader.ApplicationUser = _unitOfWork.ApplicationUser
+                                                            .GetFirstOrDefault(c => c.Id == claim.Value,
+                                                                    includeProperties: "Company");
+
+            ShoppingCartVM.ListCart = _unitOfWork.ShoppingCart
+                                        .GetAll(c => c.ApplicationUserId == claim.Value,
+                                        includeProperties: "Product");
+
+            ShoppingCartVM.OrderHeader.PaymentStatus = StoreProcedureCoverTypeConstants.PaymentStatusPending;
+            ShoppingCartVM.OrderHeader.OrderStatus = StoreProcedureCoverTypeConstants.StatusPending;
+            ShoppingCartVM.OrderHeader.ApplicationUserId = claim.Value;
+            ShoppingCartVM.OrderHeader.OrderDate = DateTime.Now;
+
+            _unitOfWork.OrderHeader.Add(ShoppingCartVM.OrderHeader);
+            _unitOfWork.Save();
+
+            List<OrderDetails> orderDetailsList = new List<OrderDetails>();
+            foreach (var item in ShoppingCartVM.ListCart)
+            {
+                item.Price = StoreProcedureCoverTypeConstants.GetPriceBasedOnQuantity(item.Count, item.Product.Price,
+                    item.Product.Price50, item.Product.Price100);
+                OrderDetails orderDetails = new OrderDetails()
+                {
+                    ProductId = item.ProductId,
+                    OrderId = ShoppingCartVM.OrderHeader.Id,
+                    Price = item.Price,
+                    Count = item.Count
+                };
+                ShoppingCartVM.OrderHeader.OrderTotal += orderDetails.Count * orderDetails.Price;
+                _unitOfWork.OrderDetails.Add(orderDetails);
+
+            }
+
+            _unitOfWork.ShoppingCart.RemoveRange(ShoppingCartVM.ListCart); // clear the cart from DB
+            _unitOfWork.Save();
+            HttpContext.Session.SetInt32(StoreProcedureCoverTypeConstants.ssShoppingCart, 0); // clear the session
+
+          
+
+            return RedirectToAction("OrderConfirmation", "Cart", new { id = ShoppingCartVM.OrderHeader.Id });
+
+        }
+
+        public IActionResult OrderConfirmation(int id)
+        {
+            return View(id);
+        }
 
     }
 }
