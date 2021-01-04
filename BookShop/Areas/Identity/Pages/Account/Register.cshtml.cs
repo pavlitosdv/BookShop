@@ -204,6 +204,22 @@ namespace BookShop.Areas.Identity.Pages.Account
                 }
             }
 
+            //reachinng that point means that something is wrong on the registration e.g. the same email might exists
+            //so going back to the registration page we want the company list and the Role list to be generated again
+            Input = new InputModel()
+            {
+                CompanyList = _unitOfWork.Company.GetAll().Select(i => new SelectListItem
+                {
+                    Text = i.Name,
+                    Value = i.Id.ToString()
+                }),
+                RoleList = _roleManager.Roles.Where(u => u.Name != StoreProcedureCoverTypeConstants.Role_User_Individual).Select(x => x.Name).Select(i => new SelectListItem
+                {
+                    Text = i,
+                    Value = i
+                })
+            };
+
             // If we got this far, something failed, redisplay form
             return Page();
         }
