@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Models;
 using Models.ViewModels;
+using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -229,7 +230,44 @@ namespace BookShop.Areas.Customer.Controllers
             _unitOfWork.Save();
             HttpContext.Session.SetInt32(StoreProcedureCoverTypeConstants.ssShoppingCart, 0); // clear the session
 
-          
+            if (stripeToken == null) // if the user is from verified company then will have 30days period to pay
+            {
+                //order will be created for delayed payment for authroized company
+                ShoppingCartVM.OrderHeader.PaymentDueDate = DateTime.Now.AddDays(30);
+                ShoppingCartVM.OrderHeader.PaymentStatus = StoreProcedureCoverTypeConstants.PaymentStatusDelayedPayment;
+                ShoppingCartVM.OrderHeader.OrderStatus = StoreProcedureCoverTypeConstants.StatusApproved;
+            }
+            else
+            {
+                //process the payment
+                var options = new ChargeCreateOptions
+                {
+                    Amount = Convert.ToInt32(ShoppingCartVM.OrderHeader.OrderTotal * 100),
+                    Currency = "usd",
+                    Description = "Order ID : " + ShoppingCartVM.OrderHeader.Id,
+                    Source = stripeToken
+                };
+
+                var service = new ChargeService();
+                Charge charge = service.Create(options); // will do the call to create the transaction on the credit card
+
+                if (charge.BalanceTransactionId == null)
+                {
+                    ShoppingCartVM.OrderHeader.PaymentStatus = StoreProcedureCoverTypeConstants.PaymentStatusRejected;
+                }
+                else
+                {
+                    ShoppingCartVM.OrderHeader.TransactionId = charge.BalanceTransactionId;
+                }
+                if (charge.Status.ToLower() == "succeeded")
+                {
+                    ShoppingCartVM.OrderHeader.PaymentStatus = StoreProcedureCoverTypeConstants.PaymentStatusApproved;
+                    ShoppingCartVM.OrderHeader.OrderStatus = StoreProcedureCoverTypeConstants.StatusApproved;
+                    ShoppingCartVM.OrderHeader.PaymentDate = DateTime.Now;
+                }
+            }
+
+            _unitOfWork.Save();
 
             return RedirectToAction("OrderConfirmation", "Cart", new { id = ShoppingCartVM.OrderHeader.Id });
 
