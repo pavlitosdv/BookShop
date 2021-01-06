@@ -33,12 +33,13 @@ namespace BookShop.Areas.Admin.Controllers
         }
 
         //this will be used either to create a new entity or to update an existing one
-        public IActionResult AddOrUpdate(int? id)
+        public async Task<IActionResult> AddOrUpdate(int? id)
         {
+            IEnumerable<Category> CatList = await _unitOfWork.Category.GetAllAsync();
             ProductViewModel productViewModel = new ProductViewModel()
             {
                 Product = new Product(),
-                CategoryList = _unitOfWork.Category.GetAll().Select(i => new SelectListItem
+                CategoryList = CatList.Select(i => new SelectListItem
                 {
                     Text = i.Name,
                     Value = i.Id.ToString()
@@ -67,7 +68,7 @@ namespace BookShop.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddOrUpdate(ProductViewModel productViewModel)
+        public async Task<IActionResult> AddOrUpdate(ProductViewModel productViewModel)
         {
             if (ModelState.IsValid)
             {
@@ -121,8 +122,8 @@ namespace BookShop.Areas.Admin.Controllers
             else // if model state is not valid we want to return back the category and coating type list
             {   //if we do not return them and return only the product view model object, it will
                 // throw an excemption becasue category and coating types will be missing
-
-                productViewModel.CategoryList = _unitOfWork.Category.GetAll().Select(i => new SelectListItem
+                IEnumerable<Category> CatList = await _unitOfWork.Category.GetAllAsync();
+                productViewModel.CategoryList = CatList.Select(i => new SelectListItem
                 {
                     Text = i.Name,
                     Value = i.Id.ToString()
