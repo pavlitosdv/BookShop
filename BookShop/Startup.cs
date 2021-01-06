@@ -45,6 +45,8 @@ namespace BookShop
             services.Configure<EmailOptions>(Configuration); //using Ioptions in order to map the values from the 
                                                              // appsettings with those from EmailOptions class properties
             services.Configure<StripeSettings>(Configuration.GetSection("Stripe"));
+            services.Configure<TwilioSettings>(Configuration.GetSection("Twilio"));
+
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -62,13 +64,13 @@ namespace BookShop
 
             services.AddAuthentication().AddFacebook(options =>
             {
-                options.AppId = "1";
-                options.AppSecret = "1";
+                options.AppId = "3610533632329607";
+                options.AppSecret = "8097298ba5c66d6f7ca955a446d215b7";
             });
             services.AddAuthentication().AddGoogle(options =>
             {
-                options.ClientId = "1";
-                options.ClientSecret = "1";
+                options.ClientId = "738963374340-71e3f0642q9kgullgjqd6l8j93bjs45v.apps.googleusercontent.com";
+                options.ClientSecret = "wOt31dfHHzpmI9ZzLjw7qUzs";
 
             });
 

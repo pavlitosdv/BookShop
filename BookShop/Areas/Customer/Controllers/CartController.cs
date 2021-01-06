@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using Models;
 using Models.ViewModels;
 using Stripe;
@@ -14,6 +15,8 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using Twilio;
+using Twilio.Rest.Api.V2010.Account;
 using Utilities;
 
 namespace BookShop.Areas.Customer.Controllers
@@ -24,16 +27,19 @@ namespace BookShop.Areas.Customer.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailSender _emailSender;
         private readonly UserManager<IdentityUser> _userManager;
+        private TwilioSettings _twilioOptions { get; set; }
 
         [BindProperty] // if we do not use that we should put into the POST SummaryPost(ShoppingCartViewModel ShoppingCartVM). 
                 //so have that Bind property attribute it does the binding automaticaly and it can be used inside the Action method
         public ShoppingCartViewModel ShoppingCartVM { get; set; }
 
-        public CartController(IUnitOfWork unitOfWork, IEmailSender emailSender, UserManager<IdentityUser> userManager)
+        public CartController(IUnitOfWork unitOfWork, IEmailSender emailSender, 
+                        UserManager<IdentityUser> userManager, IOptions<TwilioSettings> twilionOptions)
         {
             _unitOfWork = unitOfWork;
             _emailSender = emailSender;
             _userManager = userManager;
+            _twilioOptions = twilionOptions.Value;
         }
 
         public IActionResult Index()
@@ -275,6 +281,21 @@ namespace BookShop.Areas.Customer.Controllers
 
         public IActionResult OrderConfirmation(int id)
         {
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == id);
+            TwilioClient.Init(_twilioOptions.AccountSid, _twilioOptions.AuthToken);
+            try
+            {
+                var message = MessageResource.Create(
+                    body: "Order Placed on Bulky Book. Your Order ID:" + id,
+                    from: new Twilio.Types.PhoneNumber(_twilioOptions.PhoneNumber),
+                    to: new Twilio.Types.PhoneNumber(orderHeader.PhoneNumber)
+                    );
+            }
+            catch (Exception ex)
+            {
+
+            }
+
             return View(id);
         }
 
