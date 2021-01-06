@@ -209,7 +209,7 @@ namespace BookShop.Areas.Customer.Controllers
             _unitOfWork.OrderHeader.Add(ShoppingCartVM.OrderHeader);
             _unitOfWork.Save();
 
-            List<OrderDetails> orderDetailsList = new List<OrderDetails>();
+            //List<OrderDetails> orderDetailsList = new List<OrderDetails>();
             foreach (var item in ShoppingCartVM.ListCart)
             {
                 item.Price = StoreProcedureCoverTypeConstants.GetPriceBasedOnQuantity(item.Count, item.Product.Price,

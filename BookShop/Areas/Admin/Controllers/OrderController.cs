@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using Models.ViewModels;
+using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +20,8 @@ namespace BookShop.Areas.Admin.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        //[BindProperty]
-        //public OrderDetailsVM OrderVM { get; set; }
+        [BindProperty]
+        public OrderDetailsVM OrderVM { get; set; }
 
         public OrderController(IUnitOfWork unitOfWork)
         {
@@ -31,6 +33,119 @@ namespace BookShop.Areas.Admin.Controllers
             return View();
         }
 
+        public IActionResult Details(int id)
+        {
+            OrderVM = new OrderDetailsVM()
+            {
+                OrderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == id,
+                                                includeProperties: "ApplicationUser"),
+                OrderDetails = _unitOfWork.OrderDetails.GetAll(o => o.OrderId == id, includeProperties: "Product")
+
+            };
+            return View(OrderVM);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("Details")]
+        public IActionResult Details(string stripeToken)
+        {
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == OrderVM.OrderHeader.Id,
+                                                includeProperties: "ApplicationUser");
+            if (stripeToken != null)
+            {
+                //process the payment
+                var options = new ChargeCreateOptions
+                {
+                    Amount = Convert.ToInt32(orderHeader.OrderTotal * 100),
+                    Currency = "usd",
+                    Description = "Order ID : " + orderHeader.Id,
+                    Source = stripeToken
+                };
+
+                var service = new ChargeService();
+                Charge charge = service.Create(options);
+
+                if (charge.Id == null)
+                {
+                    orderHeader.PaymentStatus = StoreProcedureCoverTypeConstants.PaymentStatusRejected;
+                }
+                else
+                {
+                    orderHeader.TransactionId = charge.Id;
+                }
+                if (charge.Status.ToLower() == "succeeded")
+                {
+                    orderHeader.PaymentStatus = StoreProcedureCoverTypeConstants.PaymentStatusApproved;
+
+                    orderHeader.PaymentDate = DateTime.Now;
+                }
+
+                _unitOfWork.Save();
+
+            }
+            return RedirectToAction("Details", "Order", new { id = orderHeader.Id });
+        }
+
+
+
+        [Authorize(Roles = StoreProcedureCoverTypeConstants.Role_Admin + "," + StoreProcedureCoverTypeConstants.Role_Employee)]
+        public IActionResult StartProcessing(int id)
+        {
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == id);
+            orderHeader.OrderStatus = StoreProcedureCoverTypeConstants.StatusInProcess;
+            _unitOfWork.Save();
+            return RedirectToAction("Index");
+        }
+
+        [Authorize(Roles = StoreProcedureCoverTypeConstants.Role_Admin + "," + StoreProcedureCoverTypeConstants.Role_Employee)]
+        public IActionResult CancelOrder(int id)
+        {
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == id);
+
+            //Stripe's refund procedure 
+            if (orderHeader.PaymentStatus == StoreProcedureCoverTypeConstants.StatusApproved)
+            {
+                var options = new RefundCreateOptions
+                {
+                    Amount = Convert.ToInt32(orderHeader.OrderTotal * 100),
+                    Reason = RefundReasons.RequestedByCustomer,
+                    Charge = orderHeader.TransactionId
+
+                };
+                var service = new RefundService();
+                Refund refund = service.Create(options);
+
+                orderHeader.OrderStatus = StoreProcedureCoverTypeConstants.StatusRefunded;
+                orderHeader.PaymentStatus = StoreProcedureCoverTypeConstants.StatusRefunded;
+            }
+            else
+            {
+                orderHeader.OrderStatus = StoreProcedureCoverTypeConstants.StatusCancelled;
+                orderHeader.PaymentStatus = StoreProcedureCoverTypeConstants.StatusCancelled;
+            }
+
+            _unitOfWork.Save();
+            return RedirectToAction("Index");
+        }
+
+
+
+        [HttpPost]
+        [Authorize(Roles = StoreProcedureCoverTypeConstants.Role_Admin + "," + StoreProcedureCoverTypeConstants.Role_Employee)]
+        public IActionResult ShipOrder()
+        {
+            //OrderVM is the binding property that's why IActionResult ShipOrder() is empty
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == OrderVM.OrderHeader.Id);
+            orderHeader.TrackingNumber = OrderVM.OrderHeader.TrackingNumber;
+            orderHeader.Carrier = OrderVM.OrderHeader.Carrier;
+            orderHeader.OrderStatus = StoreProcedureCoverTypeConstants.StatusShipped;
+            orderHeader.ShippingDate = DateTime.Now;
+
+            _unitOfWork.Save();
+            return RedirectToAction("Index");
+        }
 
 
 
