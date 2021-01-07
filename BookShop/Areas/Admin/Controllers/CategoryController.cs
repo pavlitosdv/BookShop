@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using Models.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,9 +22,26 @@ namespace BookShop.Areas.Admin.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int productPage = 1)
         {
-            return View();
+            CategoryVM categoryVM = new CategoryVM()
+            {
+                Categories = await _unitOfWork.Category.GetAllAsync()
+            };
+
+            var count = categoryVM.Categories.Count();
+            categoryVM.Categories = categoryVM.Categories.OrderBy(p => p.Name)
+                .Skip((productPage - 1) * 2).Take(2).ToList();
+
+            categoryVM.PagingInfo = new PagingInfo
+            {
+                CurrentPage = productPage,
+                ItemsPerPage = 2,
+                TotalItem = count,
+                urlParam = "/Admin/Category/Index?productPage=:"
+            };
+
+            return View(categoryVM);
         }
 
         //this will be used either to create a new entity or to update an existing one
